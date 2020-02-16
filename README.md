@@ -29,5 +29,6 @@ supported inverters are WVC295, WVC300, WVC350, WVC600,WVC700 WVC850, WVC1200 an
 R2 and R3 denote the inverter  versions 
 
 WVC1200/c784/R2
+
 WVC700/ 4000c784/R3
 

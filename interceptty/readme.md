@@ -1,1 +1,1 @@
-interceptty for openwrt platform
+interceptty binary for openwrt platform

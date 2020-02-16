@@ -30,5 +30,5 @@ R2 and R3 denote the inverter  versions
 
 WVC1200/c784/R2
 
-WVC700/ 4000c784/R3
+WVC700/4000c784/R3
 

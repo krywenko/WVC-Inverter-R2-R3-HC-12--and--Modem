@@ -401,7 +401,7 @@ OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  
 #echo $Sample
 
 ##################  TEST from key file ####################
-OUTPUT="$(cat /home/stephen/r3 | sed -nr '/^.{56,56}$/p')"  
+#OUTPUT="$(cat /home/stephen/r3 | sed -nr '/^.{56,56}$/p')"  
 echo $OUTPUT
 
   ######Convert Hex to Temp #########

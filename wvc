@@ -1,6 +1,6 @@
 #!/bin/bash
 
-host=127.0.0.1  #Mqtt  host 
+host=192.168.200.254  #Mqtt  host 
 
 volts=0
 av=0
@@ -69,14 +69,13 @@ H1="$(echo $D_id | cut  -c1-2 )"
 H2="$(echo $D_id | cut  -c3-4 )"
 
 Payload="$(echo \\xf2\\x$M1\\x$M2\\x$M3\\x$M4\\x$H1\\x$H2\\x65)" 
-
 echo  -en ${Payload}  > /tmp/ttyWVCDUMMY$I
 
 sleep .6
 OUTPUTx="$(cat /dev/shm/ser-data$I)"
 OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed -nr '/^.{34,34}$/p')"
 Sample="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed -nr '/^.{34,34}$/p')" 
-echo $Sample
+
 sleep .8
 ######Convert Hex to temp #########
 TEMP="$(echo $OUTPUT | cut -c33-34)"
@@ -112,7 +111,7 @@ MQttT="$(cat lookup | jq --arg Itype "$Itype" --arg Input "$Input" '.[$Itype]  |
 TEMP="$(echo $OUTPUT | cut -c29-32 | tac -rs .. | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
 
- Input="$(echo 'VAC'$TDEC)"
+Input="$(echo 'VAC'$TDEC)"
 MQttVAC="$(cat lookup | jq --arg Itype "$Itype" --arg Input "$Input" '.[$Itype]  | .[$Input]' |  sed 's/[^-.0-9]*//g')"
 
 echo "VAC  " $MQttVAC
@@ -394,19 +393,22 @@ echo  -en ${Payload}  > /tmp/ttyWVCDUMMY$I
 
 sleep .6
 
-OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed 's/^..//'| sed -nr '/^.{56,56}$/p')" #
+#OUTPUT="$(cat /dev/shm/ser-data$I)"
+OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed 's/^..//')" #
+#OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed 's/^..//'| sed -nr '/^.{56,56}$/p')" #
 
 #####  enable sample tor debug purpuse ##################
 #Sample="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d'  | sed 's/^..//')" #| sed -nr '/^.{56,56}$/p')" 
+Sample="$(cat /dev/shm/ser-data$I  | sed 's/<.*//')" # | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d'  | sed 's/^..//')" #| sed -nr '/^.{56,56}$/p')" 
 #echo $Sample
 
 ##################  TEST from key file ####################
 #OUTPUT="$(cat /home/stephen/r3 | sed -nr '/^.{56,56}$/p')"  
-echo $OUTPUT
+#echo $OUTPUT
 
   ######Convert Hex to Temp #########
-TEMP="$(echo $OUTPUT | cut -c53-56 | echo $(tr -d '\n') )"
-TDEC=$(x=$((16#$TEMP)); [ "$x" -gt 32767 ] && ((x=x-65535)); echo "$x"; )
+TEMP="$(echo $OUTPUT | cut -c49-52 | echo $(tr -d '\n') )"
+TDEC="$(echo $(( 16#${TEMP:2:3}${TEMP:0:2} )))"
 MQttT="$( echo $TDEC / 100 | bc -l| head -c-19  )"
 
  
@@ -438,74 +440,65 @@ if [ -z "$OUTPUT" ]; then
  echo  "Inverter ID " $D_id
  
  echo "Temp  " $MQttT
-mosquitto_pub -h $host -t "incoming/$3/AC-Energy/current-$D_id" -m "N:$MQttT"
+mosquitto_pub -h $host -t "incoming/$3/Temperature/current-$D_id" -m "$MQttT"
  
 
  ######Convert Hex to VDC #########
-TEMP="$(echo $OUTPUT | cut -c29-32 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c27-30 | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
 MQttVDC="$( echo $TDEC / 100 | bc -l  | head -c-19 )"
 echo "VDC  " $MQttVDC
-mosquitto_pub -h $host -t "incoming/$3/AC-Energy/current-$D_id" -m "N:$MQttVDC"
+mosquitto_pub -h $host -t "incoming/$3/Vdc/current-$D_id" -m "$MQttVDC"
 
 ######Convert Hex to VAC #########
-TEMP="$(echo $OUTPUT | cut -c33-36 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c31-34 | echo $(tr -d '\n') )"
 VDEC="$(echo $(( 16#$TEMP )))"
 MQttVAC="$( echo $VDEC / 100 | bc -l | head -c-19 )"
 echo "VAC  " $MQttVAC
-mosquitto_pub -h $host -t "incoming/$3/AC-Energy/current-$D_id" -m "N:$MQttVAC"
+mosquitto_pub -h $host -t "incoming/$3/Vac/current-$D_id" -m "$MQttVAC"
 
  ######Convert Hex to ADC #########
-TEMP="$(echo $OUTPUT | cut -c37-40 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c35-38 | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
 MQttADC="$( echo $TDEC / 100 | bc -l | head -c-19 )"
 echo "ADC  " $MQttADC
-mosquitto_pub -h $host -t "incoming/$3/AC-Energy/current-$D_id" -m "N:$MQttADC"
+mosquitto_pub -h $host -t "incoming/$3/Idc/current-$D_id" -m "$MQttADC"
 
 ######Convert Hex to AAC #########
-TEMP="$(echo $OUTPUT | cut -c49-52 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c47-50 | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
-TDEC="$( echo $TDEC / 10 | bc -l| head -c-16 )"
+MQttPAC="$( echo $TDEC / 10 | bc -l| head -c-16 )"
+echo "PAC  " $MQttPAC
+mosquitto_pub -h $host -t "incoming/$3/Pac/current-$D_id" -m "$MQttPAC"
 
-MQttAAC="$( echo $TDEC / $MQttVAC | bc -l | head -c-16 )" 
+MQttAAC="$( echo $MQttPAC / $MQttVAC | bc -l | head -c-16 )" 
 echo "AAC  " $MQttAAC
-mosquitto_pub -h $host -t "incoming/$3/AC-Energy/current-$D_id" -m "N:$MQttAAC"
+mosquitto_pub -h $host -t "incoming/$3/Iac/current-$D_id" -m "$MQttAAC"
 
+# Total energy since first start
 ######Convert Hex to KWATT #########
-TMP="$(echo $OUTPUT | cut -c41-48 | echo $(tr -d '\n') | tr '[:lower:]' '[:upper:]')"
+TMP="$(echo $OUTPUT | cut -c39-46 | echo $(tr -d '\n') | tr '[:lower:]' '[:upper:]')"
+TMP4="$(echo ${TMP:4:7}${TMP:0:4})"
+TDEC="$(echo "ibase=16;obase=A;$TMP4" | bc )"
 
-TMP1="$(echo $TMP | tac -rs .. | echo $(tr -d '\n') )"
-TMP3="$(echo $TMP | tac -rs . | echo $(tr -d '\n') )"
-
-TMP2=$(echo "ibase=16;obase=2;$TMP1" | bc | tr 01 10 )
-
-TDEC="$(echo $(( 2#$TMP2 )))"
-MQttWATT="$( echo $TDEC / 1000 | bc -l | head -c-18 )" 
-echo "Watt1  " $MQttWATT
-mosquitto_pub -h $host -t "WATTS/1" -m "N:$MQttWATT"
- TDEC="$(echo $(( 16#$TMP1 )))"
- MQttWATT="$( echo $TDEC / 1000 | bc -l | head -c-18 )" 
-echo "Watt2  " $MQttWATT
-mosquitto_pub -h $host -t "WATTS/2" -m "N:$MQttWATT"
- TDEC="$(echo $(( 16#$TMP3 )))"
- MQttWATT="$( echo $TDEC / 1000 | bc -l | head -c-18 )" 
-echo "Watt3  " $MQttWATT
-mosquitto_pub -h $host -t "WATTS/3" -m "N:$MQttWATT"
+MQttEnergy="$( echo $TDEC / 100 | bc -l | head -c-18 )" 
+echo "Energy  " $MQttEnergy
+mosquitto_pub -h $host -t "incoming/$3/Total-Energy/current-$D_id" -m "$MQttEnergy"
 
  
- av="$(echo $av+$MQttVAC |bc -l)"
+av="$(echo $av+$MQttVAC |bc -l)"
 aa="$( echo $aa+$MQttAAC |bc -l)"
 dv="$(echo $dv+$MQttVDC |bc -l)"
 da="$( echo $da+$MQttADC |bc -l)"
 DC="$( echo $MQttVDC \* $MQttADC |bc -l)"
 AC="$( echo $MQttVAC \* $MQttAAC |bc -l)"
-mosquitto_pub -h $host -t "incoming/$3/DC-Energy/power-$D_id" -m "N:$DC"
-mosquitto_pub -h $host -t "incoming/$3/AC-Energy/power-$D_id" -m "N:$AC"
+mosquitto_pub -h $host -t "incoming/$3/Pdc/current-$D_id" -m "$DC"
+#mosquitto_pub -h $host -t "incoming/$3/AC-Energy/power-$D_id" -m "N:$AC"
 
-EF="$( echo $AC / $DC |bc -l | head -c-19 )"
+EF="$( echo $MQttPAC / $DC |bc -l | head -c-19 )"
    if (( $(echo "$EF < 1" |bc -l) )); then
 
-   mosquitto_pub -h $host -t "incoming/$3/EF-Energy/energy-$D_id" -m "N:$EF"
+   mosquitto_pub -h $host -t "incoming/$3/Efficiency/current-$D_id" -m "$EF"
    echo "Panel Efficiency" $EF
    fi
 
@@ -536,17 +529,17 @@ if [ $n -eq 0 ]; then
   
     wattsA="$(echo $av \* $aa | bc -l | head -c-19)"
     echo  "AC watts " $wattsA
-    mosquitto_pub -h $host -t "incoming/$3/AC-Energy/power-Total" -m "N:$wattsA"
+    #mosquitto_pub -h $host -t "incoming/$3/AC-Energy/power-Total" -m "N:$wattsA"
  
     wattsD="$(echo $dv \* $da | bc -l | head -c-19)"
     echo  "DC watts " $wattsD
-    mosquitto_pub  -h $host -t "incoming/$3/DC-Energy/power-Total" -m "N:$wattsD"
+    #mosquitto_pub  -h $host -t "incoming/$3/DC-Energy/power-Total" -m "N:$wattsD"
     
     EF="$( echo $wattsA / $wattsD |bc -l | head -c-19 )"
 
       if (( $(echo "$EF < 1" |bc -l) )); then
 
-        mosquitto_pub -h $host -t "incoming/$3/EF-Energy/energy-Overall" -m "N:$EF"
+        #mosquitto_pub -h $host -t "incoming/$3/EF-Energy/energy-Overall" -m "N:$EF"
         echo "Overall Efficiency " $EF
       fi
    fi 

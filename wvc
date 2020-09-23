@@ -393,9 +393,7 @@ echo  -en ${Payload}  > /tmp/ttyWVCDUMMY$I
 
 sleep .6
 
-#OUTPUT="$(cat /dev/shm/ser-data$I)"
-OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed 's/^..//')" #
-#OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed 's/^..//'| sed -nr '/^.{56,56}$/p')" #
+OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed 's/^..//')" #| sed -nr '/^.{56,56}$/p')" #
 
 #####  enable sample tor debug purpuse ##################
 #Sample="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d'  | sed 's/^..//')" #| sed -nr '/^.{56,56}$/p')" 
@@ -409,6 +407,7 @@ Sample="$(cat /dev/shm/ser-data$I  | sed 's/<.*//')" # | sed 's/>//' | sed 's/0x
   ######Convert Hex to Temp #########
 TEMP="$(echo $OUTPUT | cut -c49-52 | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#${TEMP:2:3}${TEMP:0:2} )))"
+
 MQttT="$( echo $TDEC / 100 | bc -l| head -c-19  )"
 
  

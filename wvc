@@ -393,9 +393,10 @@ echo  -en ${Payload}  > /tmp/ttyWVCDUMMY$I
 
 sleep .6
 
-#OUTPUT="$(cat /dev/shm/ser-data$I)"
-OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed 's/^..//')" #
+#OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' |  sed -nr '/^.{56,56}$/p')"
+#OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed 's/^..//')" #
 #OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed 's/^..//'| sed -nr '/^.{56,56}$/p')" #
+OUTPUT="$(cat /dev/shm/ser-data0 | sed 's/<.*//' | sed 's/>//' | sed 's/0x//' | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' |  sed -nr '/^.{56,56}$/p')"
 
 #####  enable sample tor debug purpuse ##################
 #Sample="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d'  | sed 's/^..//')" #| sed -nr '/^.{56,56}$/p')" 
@@ -407,7 +408,9 @@ Sample="$(cat /dev/shm/ser-data$I  | sed 's/<.*//')" # | sed 's/>//' | sed 's/0x
 #echo $OUTPUT
 
   ######Convert Hex to Temp #########
-TEMP="$(echo $OUTPUT | cut -c49-52 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c51-54 | echo $(tr -d '\n') )"
+#TEMP="$(echo $OUTPUT | cut -c49-52 | echo $(tr -d '\n') )"
+#TDEC="$(echo $(( 16#${TEMP:0:2}${TEMP:2:3} )))"
 TDEC="$(echo $(( 16#${TEMP:2:3}${TEMP:0:2} )))"
 MQttT="$( echo $TDEC / 100 | bc -l| head -c-19  )"
 
@@ -416,6 +419,7 @@ MQttT="$( echo $TDEC / 100 | bc -l| head -c-19  )"
 
  if [ -z "$MQttT"  ]; then
      echo  " no  input from inverter "  $D_id
+        mosquitto_pub -h $host -t "incoming/$3/comstatus/current-$D_id" -m "0"
       # > /dev/shm/ser-data$I
         sleep .4
         echo -en ${ModemTest} > /tmp/ttyWVCDUMMY$I   
@@ -436,7 +440,7 @@ if [ -z "$OUTPUT" ]; then
  echo "No input"
  echo " "
  else
-
+ mosquitto_pub -h $host -t "incoming/$3/comstatus/current-$D_id" -m "1"
  echo  "Inverter ID " $D_id
  
  echo "Temp  " $MQttT
@@ -444,28 +448,29 @@ mosquitto_pub -h $host -t "incoming/$3/Temperature/current-$D_id" -m "$MQttT"
  
 
  ######Convert Hex to VDC #########
-TEMP="$(echo $OUTPUT | cut -c27-30 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c29-32 | echo $(tr -d '\n') )"
+#TEMP="$(echo $OUTPUT | cut -c27-30 | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
 MQttVDC="$( echo $TDEC / 100 | bc -l  | head -c-19 )"
 echo "VDC  " $MQttVDC
 mosquitto_pub -h $host -t "incoming/$3/Vdc/current-$D_id" -m "$MQttVDC"
 
 ######Convert Hex to VAC #########
-TEMP="$(echo $OUTPUT | cut -c31-34 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c33-36 | echo $(tr -d '\n') )"
 VDEC="$(echo $(( 16#$TEMP )))"
 MQttVAC="$( echo $VDEC / 100 | bc -l | head -c-19 )"
 echo "VAC  " $MQttVAC
 mosquitto_pub -h $host -t "incoming/$3/Vac/current-$D_id" -m "$MQttVAC"
 
  ######Convert Hex to ADC #########
-TEMP="$(echo $OUTPUT | cut -c35-38 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c37-40 | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
 MQttADC="$( echo $TDEC / 100 | bc -l | head -c-19 )"
 echo "ADC  " $MQttADC
 mosquitto_pub -h $host -t "incoming/$3/Idc/current-$D_id" -m "$MQttADC"
 
 ######Convert Hex to AAC #########
-TEMP="$(echo $OUTPUT | cut -c47-50 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c49-52 | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
 MQttPAC="$( echo $TDEC / 10 | bc -l| head -c-16 )"
 echo "PAC  " $MQttPAC
@@ -477,7 +482,7 @@ mosquitto_pub -h $host -t "incoming/$3/Iac/current-$D_id" -m "$MQttAAC"
 
 # Total energy since first start
 ######Convert Hex to KWATT #########
-TMP="$(echo $OUTPUT | cut -c39-46 | echo $(tr -d '\n') | tr '[:lower:]' '[:upper:]')"
+TMP="$(echo $OUTPUT | cut -c41-48 | echo $(tr -d '\n') | tr '[:lower:]' '[:upper:]')"
 TMP4="$(echo ${TMP:4:7}${TMP:0:4})"
 TDEC="$(echo "ibase=16;obase=A;$TMP4" | bc )"
 

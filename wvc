@@ -394,7 +394,7 @@ echo  -en ${Payload}  > /tmp/ttyWVCDUMMY$I
 
 sleep .6
 
-OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed 's/^..//')" #| sed -nr '/^.{56,56}$/p')" #
+OUTPUT="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d' | sed -nr '/^.{56,56}$/p')" #
 
 #####  enable sample tor debug purpuse ##################
 #Sample="$(cat /dev/shm/ser-data$I | sed 's/<.*//' | sed 's/>//' | sed 's/0x//'  | sed -E ':a ; $!N ; s/\n\s+/ / ; ta ; P ; D' | tr -d ' ' | sed '/^$/d'  | sed 's/^..//')" #| sed -nr '/^.{56,56}$/p')" 
@@ -445,28 +445,28 @@ mosquitto_pub -h $host -t "incoming/$3/AC-Energy/current-$D_id" -m "N:$MQttT"
  
 
  ######Convert Hex to VDC #########
-TEMP="$(echo $OUTPUT | cut -c27-30 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c29-32 | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
 MQttVDC="$( echo $TDEC / 100 | bc -l  | head -c-19 )"
 echo "VDC  " $MQttVDC
 mosquitto_pub -h $host -t "incoming/$3/AC-Energy/current-$D_id" -m "N:$MQttVDC"
 
 ######Convert Hex to VAC #########
-TEMP="$(echo $OUTPUT | cut -c31-34 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c33-36 | echo $(tr -d '\n') )"
 VDEC="$(echo $(( 16#$TEMP )))"
 MQttVAC="$( echo $VDEC / 100 | bc -l | head -c-19 )"
 echo "VAC  " $MQttVAC
 mosquitto_pub -h $host -t "incoming/$3/AC-Energy/current-$D_id" -m "N:$MQttVAC"
 
  ######Convert Hex to ADC #########
-TEMP="$(echo $OUTPUT | cut -c35-38 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c37-40 | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
 MQttADC="$( echo $TDEC / 100 | bc -l | head -c-19 )"
 echo "ADC  " $MQttADC
 mosquitto_pub -h $host -t "incoming/$3/AC-Energy/current-$D_id" -m "N:$MQttADC"
 
 ######Convert Hex to AAC #########
-TEMP="$(echo $OUTPUT | cut -c47-50 | echo $(tr -d '\n') )"
+TEMP="$(echo $OUTPUT | cut -c49-52 | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
 TDEC="$( echo $TDEC / 10 | bc -l| head -c-16 )"
 

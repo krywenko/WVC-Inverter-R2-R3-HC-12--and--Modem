@@ -47,8 +47,8 @@ ModemTest="$(echo \\xf8\\x$M1\\x$M2\\x$M3\\x$M4\\xff\\xff\\x6b)"
 if [ $4 == modem ]; then
 echo "WVC MODEM "
 
-I="$(ps -efww | grep '[W]VC /dev' | wc -l)" # for openwrt remove ps arguements -efww
-echo  "virtural port " /dev/ttyWVCDUMMY$I
+I="$(ps -efww | grep 'tty[W]VC' | wc -l)" # for openwrt remove ps arguements -efww
+echo  "virtural port " /tmp/ttyWVCDUMMY$I
 
 for (( ; ; ))
 do
@@ -223,8 +223,8 @@ fi
 if [ $4 == hc ]; then
 
 
-I="$(ps -efww | grep '[W]VC /dev' | wc -l)" # for openwrt remove ps arguements -efww
-echo  "virtural port " /dev/ttyWVCDUMMY$I
+I="$(ps -efww | grep 'tty[W]VC' | wc -l)" # for openwrt remove ps arguements -efww
+echo  "virtural port " /tmp/ttyWVCDUMMY$I
 
 for (( ; ; ))
 do

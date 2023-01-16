@@ -85,7 +85,7 @@ TDEC="$(echo $(( 16#$TEMP )))"
 Input="$(echo 'TMP'$TDEC)"
 MQttT="$(cat lookup | jq --arg Itype "$Itype" --arg Input "$Input" '.[$Itype]  | .[$Input]' |  sed 's/[^-.0-9]*//g')"
 
- if [ $MQttT -eq 86 ]; then
+ if [[ $MQttT -eq 86 ]]; then
      echo  " no  input from inverter "  $D_id
       # > /dev/shm/ser-data$I
         sleep .4
@@ -122,7 +122,7 @@ mosquitto_pub -h $host -t "incoming/$3/AC-Energy/voltage-$D_id" -m "N:$MQttVAC"
 ######Convert Hex to AAC #########
 TEMP="$(echo $OUTPUT | cut -c25-28 | tac -rs .. | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
-if [ ${MQttVAC%.*} -gt 160 ]; then
+if [[ ${MQttVAC%.*} -gt 160 ]]; then
 
  Input="$(echo 'AACB'$TDEC)"
  MQttAAC="$(cat lookup | jq --arg Itype "$Itype" --arg Input "$Input" '.[$Itype]  | .[$Input]' |  sed 's/[^-.0-9]*//g')"
@@ -270,7 +270,7 @@ MQttT="$(cat lookup | jq --arg Itype "$Itype" --arg Input "$Input" '.[$Itype]  |
 #if [ -z "$OUTPUT" ]; then
 #echo " no input"
 #else
- if [ $MQttT -eq 86 ]; then
+ if [[ $MQttT -eq 86 ]]; then
      echo  " no  input from inverter "  $D_id
       # > /dev/shm/ser-data$I
         sleep .4
@@ -312,7 +312,7 @@ mosquitto_pub -h $host -t "incoming/$3/AC-Energy/voltage-$D_id" -m "N:$MQttVAC"
 ######Convert Hex to AAC #########
 TEMP="$(echo $OUTPUT | cut -c21-24 | tac -rs .. | echo $(tr -d '\n') )"
 TDEC="$(echo $(( 16#$TEMP )))"
-if [ ${MQttVAC%.*} -gt 160 ]; then
+if [[ ${MQttVAC%.*} -gt 160 ]]; then
 
  Input="$(echo 'AACB'$TDEC)"
  MQttAAC="$(cat lookup | jq --arg Itype "$Itype" --arg Input "$Input" '.[$Itype]  | .[$Input]' |  sed 's/[^-.0-9]*//g')"
